@@ -45,20 +45,25 @@ for idx, amount, description in credits:
 
 # Simulate some completed payouts for history
 if merchant_objs[0].available_balance() >= 5000000:
-    payout = Payout.objects.create(
+    payout, created = Payout.objects.get_or_create(
         merchant=merchant_objs[0],
-        amount_paise=5000000,
-        bank_account_id=merchant_objs[0].bank_account,
-        status='completed',
         idempotency_key='seed-completed-1',
+        defaults={
+            'amount_paise': 5000000,
+            'bank_account_id': merchant_objs[0].bank_account,
+            'status': 'completed',
+        }
     )
-    Transaction.objects.create(
-        merchant=merchant_objs[0],
-        amount_paise=5000000,
-        transaction_type='debit',
-        description='Payout completed #1',
-        payout=payout,
-    )
-    print(f"Created completed payout: ₹{5000000/100:.2f}")
+    if created:
+        Transaction.objects.create(
+            merchant=merchant_objs[0],
+            amount_paise=5000000,
+            transaction_type='debit',
+            description='Payout completed #1',
+            payout=payout,
+        )
+        print(f"Created completed payout: ₹{5000000/100:.2f}")
+    else:
+        print(f"Found existing completed payout: ₹{5000000/100:.2f}")
 
 print("\nSeed data created successfully!")
