@@ -26,16 +26,13 @@ class Merchant(models.Model):
 
     def available_balance(self):
         # IMPORTANT: Must use DB-level aggregation, NOT Python arithmetic
-        # Sum credits minus sum of non-held debits
+        # Sum credits minus sum of debits (all debits regardless of payout status)
         credit_sum = self.transactions.aggregate(
             total=Sum('amount_paise', filter=Q(transaction_type='credit'))
         )['total'] or 0
 
         debit_sum = self.transactions.aggregate(
-            total=Sum('amount_paise', filter=Q(
-                transaction_type='debit',
-                payout__status__in=['pending', 'processing', 'completed']
-            ))
+            total=Sum('amount_paise', filter=Q(transaction_type='debit'))
         )['total'] or 0
 
         return credit_sum - debit_sum
