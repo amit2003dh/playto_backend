@@ -30,6 +30,9 @@ def process_payout(self, payout_id):
         payout.last_attempted_at = timezone.now()
         payout.save(update_fields=['status', 'attempts', 'last_attempted_at'])
 
+    # Wait to show processing state in UI
+    time.sleep(3)
+
     # Simulate bank call OUTSIDE the transaction (I/O should not hold DB locks)
     outcome = simulate_bank_transfer(payout.amount_paise)
 
